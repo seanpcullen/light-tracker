@@ -9,188 +9,327 @@
     <title>Light Tracker</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        :root {
-            --bg-start: #0f2027;
-            --bg-mid:   #203a43;
-            --bg-end:   #2c5364;
-            --accent:   #fdd835;
-            --text-main: #ffffff;
-            --text-dim:  #cfd8dc;
-            --card-bg:   rgba(255, 255, 255, 0.1);
-            --grade-a:   #4cd964;
-            --grade-b:   #ffcc00;
-            --grade-c:   #ff9500;
-            --grade-d:   #ff3b30;
-            --grade-f:   #c0392b;
-        }
+<style>
+:root {
+    --bg-start: #0f2027;
+    --bg-mid:   #203a43;
+    --bg-end:   #2c5364;
+    --accent:   #fdd835;
+    --accent-warm: #ffb74d;
+    --text-main: #ffffff;
+    --text-dim:  #cfd8dc;
+    --card-bg:   rgba(255,255,255,0.08);
+    --card-border: rgba(255,255,255,0.10);
+    --grade-a:   #4cd964;
+    --grade-b:   #ffcc00;
+    --grade-c:   #ff9500;
+    --grade-d:   #ff3b30;
+    --grade-f:   #c0392b;
+}
 
-        * { box-sizing: border-box; }
+* { box-sizing: border-box; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(to bottom, var(--bg-start), var(--bg-mid), var(--bg-end));
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center;
-            -webkit-user-select: none;
-            overflow-x: hidden;
-        }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    -webkit-user-select: none; overflow-x: hidden;
+    background: linear-gradient(to bottom, var(--bg-start), var(--bg-mid), var(--bg-end));
+    background-attachment: fixed;
+    transition: background 1.5s ease;
+}
 
-        /* ── HEADER ── */
-        .header {
-            margin-top: 50px;
-            text-align: center;
-            padding: 0 20px;
-        }
-        .header h1 {
-            font-weight: 300; font-size: 0.9rem; margin: 0;
-            color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px;
-        }
-        .header .big-stat {
-            font-size: 3rem; font-weight: 700; margin: 5px 0;
-            background: linear-gradient(to right, #ffecd2 0%, #fcb69f 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .header-sub {
-            display: flex; justify-content: center; gap: 24px; margin-top: 10px;
-        }
-        .header-badge { display: flex; flex-direction: column; align-items: center; }
-        .header-badge-label {
-            font-size: 0.7rem; color: var(--text-dim);
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .header-badge-value { font-size: 1.1rem; font-weight: 600; }
+.header { margin-top: 50px; text-align: center; padding: 0 20px; width: 90%; max-width: 420px; }
+.header h1 {
+    font-weight: 300; font-size: 0.85rem; margin: 0;
+    color: var(--text-dim); text-transform: uppercase; letter-spacing: 2.5px;
+}
+.header .big-stat {
+    font-size: 2.7rem; font-weight: 700; margin: 4px 0 2px;
+    background: linear-gradient(to right, #ffecd2 0%, #fcb69f 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-variant-numeric: tabular-nums;
+}
+.header-sub { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 4px; }
+.header-yearago { font-size: 0.72rem; color: rgba(255,255,255,0.4); font-style: italic; }
 
-        /* ── CONTAINER & CARD ── */
-        .container {
-            width: 90%; max-width: 420px;
-            margin-top: 20px; padding-bottom: 40px;
-        }
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-radius: 20px; padding: 20px; margin-bottom: 15px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .card-title {
-            font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;
-            color: var(--text-dim); margin-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;
-        }
-        .stat-row {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px;
-        }
-        .stat-row:last-child { margin-bottom: 0; }
-        .label { font-size: 1rem; color: var(--text-dim); }
-        .value { font-size: 1.1rem; font-weight: 600; }
+.solstice-card { margin-top: 18px; padding: 16px 18px 12px; }
+.solstice-arc-wrap { width: 100%; height: 100px; position: relative; }
+.solstice-arc-wrap svg { width: 100%; height: 100%; }
+.solstice-stat-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 6px; font-size: 0.72rem; color: var(--text-dim);
+}
+.solstice-percent {
+    font-size: 1.5rem; font-weight: 700; color: var(--accent-warm);
+    display: block; line-height: 1; margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+}
+.solstice-percent-label { font-size: 0.74rem; color: var(--text-dim); margin-top: 4px; }
 
-        /* ── TODAY GRADE HEADER ── */
-        .today-grade-pill {
-            display: inline-flex; align-items: baseline; gap: 4px;
-        }
-        .today-grade-pill .grade-letter-big {
-            font-size: 1.6rem; font-weight: 800; line-height: 1;
-        }
-        .header-seasonal-tag {
-            font-size: 0.72rem; color: rgba(255,255,255,0.5);
-            margin-top: 3px; letter-spacing: 0.3px;
-        }
+.container {
+    width: 90%; max-width: 420px;
+    margin-top: 10px; padding-bottom: 40px;
+}
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border-radius: 20px; padding: 18px 20px; margin-bottom: 14px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+    border: 1px solid var(--card-border);
+}
+.card-title {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--text-dim); margin-bottom: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 7px;
+}
+.card-title-bare {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--text-dim); margin-bottom: 10px;
+}
 
-        /* ── GRADE BOXES ── */
-        .grade-section { margin-bottom: 14px; }
-        .grade-section:last-child { margin-bottom: 0; }
-        .grade-day-label {
-            font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .grade-row { display: flex; gap: 6px; }
-        .grade-box {
-            background: rgba(0,0,0,0.22); border-radius: 12px; flex: 1;
-            padding: 10px 4px; text-align: center;
-            display: flex; flex-direction: column; align-items: center; gap: 2px;
-        }
-        .grade-time   { font-size: 0.68rem; color: rgba(255,255,255,0.55); }
-        .grade-letter { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
-        .grade-sub    { font-size: 0.60rem; color: rgba(255,255,255,0.4); line-height: 1.3; }
-        .grade-tag    { font-size: 0.58rem; color: rgba(255,255,255,0.35); font-style: italic; }
+.featured-day {
+    border-radius: 16px; padding: 14px 16px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+.featured-day:last-child { margin-bottom: 0; }
+.featured-day .grade-circle {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.3rem; flex-shrink: 0;
+    border: 2px solid currentColor;
+}
+.featured-day .featured-content { flex: 1; min-width: 0; }
+.featured-day .featured-label {
+    font-size: 0.66rem; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--text-dim); margin-bottom: 2px;
+}
+.featured-day .featured-day-name {
+    font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 2px;
+}
+.featured-day .featured-detail { font-size: 0.78rem; color: var(--text-dim); }
+.featured-day.is-best { border-color: rgba(76,217,100,0.35); }
+.featured-day.is-worst { border-color: rgba(255,59,48,0.30); }
 
-        /* ── DST COUNTDOWN ── */
-        .dst-row { display: flex; justify-content: space-around; text-align: center; margin-top: 10px; }
-        .dst-box  { display: flex; flex-direction: column; }
-        .dst-num  { font-size: 1.5rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
-        .dst-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; }
+.stat-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+}
+.stat-row:last-child { margin-bottom: 0; }
+.label { font-size: 0.95rem; color: var(--text-dim); }
+.value { font-size: 1rem; font-weight: 600; }
+.value-grade { font-weight: 800; font-size: 1.2rem; }
+.value-sub { font-size: 0.66rem; color: rgba(255,255,255,0.45); font-style: italic; display: block; text-align: right; }
 
-        /* ── CHART ── */
-        .graph-container { height: 190px; width: 100%; }
+.sun-arc-wrap { width: 100%; height: 130px; margin-top: 4px; }
+.sun-arc-wrap svg { width: 100%; height: 100%; overflow: visible; }
+.sun-info-row {
+    display: flex; justify-content: space-between; margin-top: 4px;
+    font-size: 0.78rem; color: var(--text-dim);
+}
+.sun-info-row strong { color: var(--text-main); font-weight: 600; }
 
-        /* ── MILESTONES ── */
-        .milestone-item {
-            display: flex; align-items: center;
-            padding: 9px 10px; border-radius: 10px;
-            background: rgba(0,0,0,0.15); margin-bottom: 5px;
-        }
-        .milestone-item:last-child { margin-bottom: 0; }
-        .milestone-item.is-today { background: rgba(253,216,53,0.1); border: 1px solid rgba(253,216,53,0.2); }
-        .milestone-icon  { font-size: 1rem; margin-right: 10px; flex-shrink: 0; }
-        .milestone-text  { flex-grow: 1; font-size: 0.9rem; font-weight: 500; }
-        .milestone-date  { font-size: 0.78rem; color: var(--text-dim); white-space: nowrap; margin-left: 8px; }
-        .milestone-item.is-today .milestone-date { color: var(--accent); font-weight: 700; }
-        .milestone-divider {
-            font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;
-            letter-spacing: 1px; margin: 10px 0 6px; opacity: 0.6;
-        }
-        .milestone-divider:first-child { margin-top: 0; }
+.schedule-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.schedule-row:last-child { border-bottom: none; }
+.schedule-row.is-now {
+    background: rgba(253,216,53,0.08);
+    margin: 0 -10px; padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(253,216,53,0.18);
+}
+.schedule-icon { font-size: 0.95rem; margin-right: 8px; }
+.schedule-label { flex: 1; font-size: 0.86rem; }
+.schedule-time { font-size: 0.84rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.schedule-row.is-now .schedule-time { color: var(--accent); font-weight: 600; }
+.schedule-row.is-now .schedule-label { font-weight: 600; }
 
-        /* ── FOOTER ── */
-        .footer-msg {
-            text-align: center; font-size: 0.75rem;
-            color: rgba(255,255,255,0.25); margin-top: 30px;
-        }
+.hourly-strip {
+    display: flex; gap: 3px; overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+.hourly-strip::-webkit-scrollbar { display: none; }
+.hour-cell {
+    flex: 0 0 auto; min-width: 42px;
+    background: rgba(0,0,0,0.18); border-radius: 8px;
+    padding: 6px 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    border: 1px solid transparent;
+}
+.hour-cell.is-now { border-color: var(--accent); background: rgba(253,216,53,0.08); }
+.hour-time { font-size: 0.55rem; color: rgba(255,255,255,0.5); }
+.hour-temp {
+    font-size: 1.05rem; font-weight: 700; color: var(--text-main);
+    line-height: 1.05; margin: 1px 0;
+    font-variant-numeric: tabular-nums;
+}
+.hour-grade { font-size: 0.62rem; font-weight: 700; line-height: 1; }
 
-        #loader {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%,-50%);
-            font-size: 1.2rem; color: var(--accent);
-        }
-        #app-content { width: 100%; display: flex; flex-direction: column; align-items: center; }
-    </style>
+.hour-day-pill {
+    flex: 0 0 auto; min-width: 56px;
+    background: rgba(255,255,255,0.04); border-radius: 8px;
+    padding: 6px 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,255,255,0.10);
+}
+.hour-day-pill-day {
+    font-size: 0.7rem; font-weight: 700; color: var(--accent-warm);
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.hour-day-pill-date {
+    font-size: 0.58rem; color: rgba(255,255,255,0.55); margin-top: 2px;
+}
+.hourly-legend {
+    display: flex; justify-content: center; gap: 12px;
+    margin-top: 10px; font-size: 0.65rem; color: var(--text-dim);
+}
+.legend-dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; margin-right: 4px; vertical-align: middle;
+}
+
+.grade-day-label {
+    font-size: 0.74rem; color: var(--text-dim); margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.grade-row { display: flex; gap: 6px; }
+.grade-box {
+    background: rgba(0,0,0,0.22); border-radius: 12px; flex: 1;
+    padding: 10px 4px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.grade-time   { font-size: 0.66rem; color: rgba(255,255,255,0.55); }
+.grade-letter { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
+.grade-sub    { font-size: 0.58rem; color: rgba(255,255,255,0.4); }
+.grade-tag    { font-size: 0.55rem; color: rgba(255,255,255,0.3); font-style: italic; }
+
+.outlook-strip {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+}
+.outlook-cell {
+    background: rgba(0,0,0,0.2); border-radius: 8px;
+    padding: 7px 2px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.outlook-cell.is-today { border: 1px solid var(--accent); background: rgba(253,216,53,0.06); }
+.outlook-day { font-size: 0.55rem; color: rgba(255,255,255,0.55); text-transform: uppercase; }
+.outlook-grade { font-size: 0.95rem; font-weight: 800; }
+.outlook-temp { font-size: 0.58rem; color: rgba(255,255,255,0.45); }
+
+.dst-row { display: flex; justify-content: space-around; text-align: center; margin-top: 6px; }
+.dst-box  { display: flex; flex-direction: column; }
+.dst-num  { font-size: 1.4rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.dst-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.first-item {
+    display: flex; align-items: center;
+    padding: 8px 10px;
+    background: rgba(76,217,100,0.06);
+    border: 1px solid rgba(76,217,100,0.15);
+    border-radius: 10px;
+    margin-bottom: 6px;
+}
+.first-item:last-child { margin-bottom: 0; }
+.first-icon { font-size: 1rem; margin-right: 10px; }
+.first-text { flex: 1; font-size: 0.85rem; }
+.first-when { font-size: 0.72rem; color: var(--text-dim); }
+
+.milestone-item {
+    display: flex; align-items: center;
+    padding: 9px 10px; border-radius: 10px;
+    background: rgba(0,0,0,0.15); margin-bottom: 5px;
+}
+.milestone-item:last-child { margin-bottom: 0; }
+.milestone-item.is-today { background: rgba(253,216,53,0.1); border: 1px solid rgba(253,216,53,0.2); }
+.milestone-icon  { font-size: 1rem; margin-right: 10px; flex-shrink: 0; }
+.milestone-text  { flex-grow: 1; font-size: 0.86rem; font-weight: 500; }
+.milestone-date  { font-size: 0.74rem; color: var(--text-dim); white-space: nowrap; margin-left: 8px; }
+.milestone-item.is-today .milestone-date { color: var(--accent); font-weight: 700; }
+.milestone-divider {
+    font-size: 0.66rem; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 1px; margin: 10px 0 6px; opacity: 0.6;
+}
+.milestone-divider:first-child { margin-top: 0; }
+
+.footer-msg {
+    text-align: center; font-size: 0.7rem;
+    color: rgba(255,255,255,0.22); margin-top: 28px;
+}
+
+#loader {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 1.1rem; color: var(--accent);
+}
+#app-content { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+.solstice-curve { fill: none; stroke: rgba(255,255,255,0.18); stroke-width: 1.5; }
+.solstice-curve-passed { fill: none; stroke: var(--accent-warm); stroke-width: 2.5; }
+.solstice-baseline { stroke: rgba(255,255,255,0.12); stroke-width: 1; stroke-dasharray: 2 3; }
+.solstice-marker { fill: var(--accent); }
+.solstice-marker-glow { fill: var(--accent); opacity: 0.3; }
+.solstice-label { fill: rgba(255,255,255,0.45); font-size: 9px; font-family: inherit; }
+
+.sun-arc-path { fill: none; stroke: rgba(253,216,53,0.20); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.sun-arc-passed { fill: none; stroke: var(--accent); stroke-width: 2; }
+.sun-horizon { stroke: rgba(255,255,255,0.18); stroke-width: 1; }
+.sun-marker-glow { fill: var(--accent); opacity: 0.25; }
+.sun-marker { fill: var(--accent); }
+.sun-arc-label { fill: rgba(255,255,255,0.5); font-size: 9px; font-family: inherit; }
+</style>
 </head>
 <body>
 
-<div id="loader">Calculating...</div>
+<div id="loader">Calculating…</div>
 <div id="app-content" style="display:none">
 
     <div class="header">
         <h1>The Light Returns</h1>
         <div class="big-stat" id="gain-text">--</div>
-        <div style="font-size:0.95rem; color:var(--text-dim)">more daylight than yesterday</div>
-        <div class="header-sub">
-            <div class="header-badge">
-                <span class="header-badge-label">Daylight</span>
-                <span class="header-badge-value" id="daylight-header">--</span>
-            </div>
-            <div class="header-badge">
-                <span class="header-badge-label">Today's Grade</span>
-                <span class="header-badge-value">
-                    <span class="today-grade-pill">
-                        <span class="grade-letter-big" id="today-grade-letter">--</span>
-                    </span>
-                </span>
-                <span class="header-seasonal-tag" id="today-seasonal-tag"></span>
-            </div>
-        </div>
+        <div class="header-sub" id="gain-sub">more daylight than yesterday</div>
+        <div class="header-yearago" id="yearago-text"></div>
     </div>
 
     <div class="container">
 
-        <!-- TODAY CARD -->
+        <div class="card solstice-card">
+            <div class="card-title-bare" style="text-align:center">The Year's Journey</div>
+            <div class="solstice-arc-wrap">
+                <svg viewBox="0 0 380 100" preserveAspectRatio="none" id="solstice-svg"></svg>
+            </div>
+            <div class="solstice-stat-row">
+                <div>
+                    <div style="text-transform:uppercase;letter-spacing:1px;font-size:0.62rem">From Winter Min</div>
+                    <span class="solstice-percent" id="solstice-percent">--%</span>
+                    <div class="solstice-percent-label" id="solstice-direction">recovered</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="text-transform:uppercase;letter-spacing:1px;font-size:0.62rem">Today's Light</div>
+                    <span class="solstice-percent" id="daylight-big">--</span>
+                    <div class="solstice-percent-label" id="vs-winter">vs longest night</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="featured-card" style="display:none">
+            <div class="card-title">Days Ahead</div>
+            <div id="best-day-slot"></div>
+            <div id="worst-day-slot"></div>
+        </div>
+
         <div class="card">
+            <div class="card-title">Today's Snapshot</div>
             <div class="stat-row">
                 <span class="label">Sunrise / Sunset</span>
                 <span class="value" id="sun-today">-- / --</span>
@@ -211,24 +350,55 @@
                 <span class="label">Wind</span>
                 <span class="value" id="wind-today">--</span>
             </div>
-        </div>
-
-        <!-- GRADES CARD -->
-        <div class="card">
-            <div class="card-title">Forecast Grades</div>
-            <div class="grade-section">
-                <div class="grade-day-label" id="grade-label-0">TODAY</div>
-                <div class="grade-row" id="grades-0"></div>
-            </div>
-            <div class="grade-section">
-                <div class="grade-day-label" id="grade-label-1">TOMORROW</div>
-                <div class="grade-row" id="grades-1"></div>
+            <div class="stat-row" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px">
+                <span class="label">Today's Grade</span>
+                <span>
+                    <span class="value-grade" id="today-grade-letter" style="color:var(--accent)">--</span>
+                    <span class="value-sub" id="today-grade-tag"></span>
+                </span>
             </div>
         </div>
 
-        <!-- DST COUNTDOWN -->
         <div class="card">
-            <div class="card-title">Daylight Saving — Spring Forward</div>
+            <div class="card-title">Sun Position</div>
+            <div class="sun-arc-wrap">
+                <svg viewBox="0 0 380 130" preserveAspectRatio="none" id="sun-arc-svg"></svg>
+            </div>
+            <div class="sun-info-row">
+                <span id="sun-altitude">--</span>
+                <span id="sun-azimuth">--</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Today's Light Schedule</div>
+            <div id="light-schedule"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Hour-by-Hour Today</div>
+            <div class="hourly-strip" id="hourly-strip"></div>
+            <div class="hourly-legend">
+                <span><span class="legend-dot" style="background:var(--grade-a)"></span>A</span>
+                <span><span class="legend-dot" style="background:var(--grade-b)"></span>B</span>
+                <span><span class="legend-dot" style="background:var(--grade-c)"></span>C</span>
+                <span><span class="legend-dot" style="background:var(--grade-d)"></span>D / F</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Tomorrow's Grades</div>
+            <div class="grade-day-label" id="grade-label-1">TOMORROW</div>
+            <div class="grade-row" id="grades-1"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">16-Day Outlook</div>
+            <div class="outlook-strip" id="outlook-strip"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title" id="dst-title">Daylight Saving</div>
             <div class="dst-row">
                 <div class="dst-box"><span class="dst-num" id="dst-days">0</span><span class="dst-label">Days</span></div>
                 <div class="dst-box"><span class="dst-num" id="dst-hours">00</span><span class="dst-label">Hrs</span></div>
@@ -237,542 +407,874 @@
             </div>
         </div>
 
-        <!-- CHART -->
-        <div class="card">
-            <div class="card-title">16-Day Forecast Trend</div>
-            <div class="graph-container">
-                <canvas id="hopeChart"></canvas>
-            </div>
+        <div class="card" id="firsts-card" style="display:none">
+            <div class="card-title">Recent Firsts</div>
+            <div id="firsts-list"></div>
         </div>
 
-        <!-- MILESTONES -->
         <div class="card">
             <div class="card-title">Upcoming Milestones</div>
             <div id="milestones-container"></div>
         </div>
 
-        <div class="footer-msg">v10.0 · NYC Light Tracker</div>
+        <div class="footer-msg">v11.0 · NYC Light Tracker</div>
     </div>
 </div>
 
 <script>
-    const LAT = 40.7128;
-    const LON = -74.0060;
-    const TIMEZONE = "America/New_York";
+const LAT = 40.7128;
+const LON = -74.0060;
+const TIMEZONE = "America/New_York";
 
-    // ──────────────────────────────────────────
-    // WEATHER CODE → HUMAN DESCRIPTION
-    // ──────────────────────────────────────────
-    function weatherDesc(code) {
-        if (code === 0)  return "Clear & Sunny ☀️";
-        if (code === 1)  return "Mostly Sunny 🌤";
-        if (code === 2)  return "Partly Cloudy ⛅";
-        if (code === 3)  return "Overcast ☁️";
-        if (code === 45 || code === 48) return "Foggy 🌫";
-        if (code === 51) return "Light Drizzle 🌦";
-        if (code === 53) return "Drizzle 🌦";
-        if (code === 55) return "Heavy Drizzle 🌧";
-        if (code === 56 || code === 57) return "Freezing Drizzle 🌧";
-        if (code === 61) return "Light Rain 🌦";
-        if (code === 63) return "Rain 🌧";
-        if (code === 65) return "Heavy Rain 🌧";
-        if (code === 66 || code === 67) return "Freezing Rain 🌧";
-        if (code === 71) return "Light Snow ❄️";
-        if (code === 73) return "Snow ❄️";
-        if (code === 75) return "Heavy Snow ❄️";
-        if (code === 77) return "Snow Grains ❄️";
-        if (code === 80) return "Showers 🌦";
-        if (code === 81) return "Rain Showers 🌧";
-        if (code === 82) return "Heavy Showers 🌧";
-        if (code >= 95)  return "Thunderstorms ⛈";
-        return "Variable";
+const NYC_AVG_HIGH = [39, 42, 51, 62, 72, 80, 85, 83, 76, 64, 53, 43];
+const MONTH_NAMES  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const IDEAL_TEMP   = 68;
+
+/* ── GRADE ENGINE ── */
+function conditionsScore(code, wind, precip) {
+    let s = 100;
+    if      (code === 0)                  s +=  5;
+    else if (code === 1)                  s -=  0;
+    else if (code === 2)                  s -= 10;
+    else if (code === 3)                  s -= 22;
+    else if (code === 45 || code === 48)  s -= 30;
+    else if (code === 51)                 s -= 27;
+    else if (code === 53)                 s -= 35;
+    else if (code === 55)                 s -= 43;
+    else if (code === 56 || code === 57)  s -= 50;
+    else if (code === 61)                 s -= 37;
+    else if (code === 63)                 s -= 52;
+    else if (code === 65)                 s -= 66;
+    else if (code === 66 || code === 67)  s -= 58;
+    else if (code === 71)                 s -= 18;
+    else if (code === 73)                 s -= 40;
+    else if (code === 75 || code === 77)  s -= 55;
+    else if (code === 80)                 s -= 35;
+    else if (code === 81)                 s -= 47;
+    else if (code === 82)                 s -= 62;
+    else if (code >= 95)                  s -= 78;
+    if      (wind <=  7) s -=  0;
+    else if (wind <= 13) s -=  8;
+    else if (wind <= 20) s -= 20;
+    else if (wind <= 28) s -= 33;
+    else                 s -= 47;
+    if (precip > 0.05) s -= 10;
+    return Math.min(105, s);
+}
+
+function tempRelativeScore(temp, month) {
+    const avg = NYC_AVG_HIGH[month];
+    const improvement = Math.abs(avg - IDEAL_TEMP) - Math.abs(temp - IDEAL_TEMP);
+    return Math.max(15, Math.min(100, 70 + improvement * 1.8));
+}
+
+function calculateGrade(temp, wind, precip, code, month) {
+    const cScore = conditionsScore(code, wind, precip);
+    const tScore = tempRelativeScore(temp, month);
+    const final  = Math.min(100, Math.round(0.60 * cScore + 0.40 * tScore));
+    let letter, color;
+    if      (final >= 96) { letter = "A+"; color = "var(--grade-a)"; }
+    else if (final >= 90) { letter = "A";  color = "var(--grade-a)"; }
+    else if (final >= 83) { letter = "B+"; color = "var(--grade-b)"; }
+    else if (final >= 76) { letter = "B";  color = "var(--grade-b)"; }
+    else if (final >= 67) { letter = "C+"; color = "var(--grade-c)"; }
+    else if (final >= 57) { letter = "C";  color = "var(--grade-c)"; }
+    else if (final >= 42) { letter = "D";  color = "var(--grade-d)"; }
+    else                  { letter = "F";  color = "var(--grade-f)"; }
+    return { letter, color, score: final };
+}
+
+function seasonalTag(temp, month) {
+    const delta = Math.round(temp - NYC_AVG_HIGH[month]);
+    const mon   = MONTH_NAMES[month];
+    if      (delta >=  15) return `${delta}° above avg for ${mon}`;
+    else if (delta >=   6) return `Warmer than avg for ${mon}`;
+    else if (delta >=  -5) return `Near avg for ${mon}`;
+    else if (delta >= -14) return `Cooler than avg for ${mon}`;
+    else                   return `${Math.abs(delta)}° below avg for ${mon}`;
+}
+
+function weatherDesc(code) {
+    if (code === 0)  return "Clear & Sunny ☀️";
+    if (code === 1)  return "Mostly Sunny 🌤";
+    if (code === 2)  return "Partly Cloudy ⛅";
+    if (code === 3)  return "Overcast ☁️";
+    if (code === 45 || code === 48) return "Foggy 🌫";
+    if (code === 51) return "Light Drizzle 🌦";
+    if (code === 53) return "Drizzle 🌦";
+    if (code === 55) return "Heavy Drizzle 🌧";
+    if (code === 56 || code === 57) return "Freezing Drizzle 🌧";
+    if (code === 61) return "Light Rain 🌦";
+    if (code === 63) return "Rain 🌧";
+    if (code === 65) return "Heavy Rain 🌧";
+    if (code === 66 || code === 67) return "Freezing Rain 🌧";
+    if (code === 71) return "Light Snow ❄️";
+    if (code === 73) return "Snow ❄️";
+    if (code === 75 || code === 77) return "Heavy Snow ❄️";
+    if (code === 80) return "Showers 🌦";
+    if (code === 81) return "Rain Showers 🌧";
+    if (code === 82) return "Heavy Showers 🌧";
+    if (code >= 95)  return "Thunderstorms ⛈";
+    return "Variable";
+}
+
+function weatherShort(code) {
+    if (code === 0 || code === 1) return "Sunny";
+    if (code === 2)               return "Partly Cloudy";
+    if (code === 3)               return "Overcast";
+    if (code >= 51 && code <= 57) return "Drizzle";
+    if (code >= 61 && code <= 67) return "Rain";
+    if (code >= 71 && code <= 77) return "Snow";
+    if (code >= 80 && code <= 82) return "Showers";
+    if (code >= 95)               return "Storms";
+    if (code === 45 || code === 48) return "Fog";
+    return "Mixed";
+}
+
+/* ── UTILITIES ── */
+function findHourIndex(hourlyTimes, dateObj, hour) {
+    const t = new Date(dateObj);
+    t.setHours(hour, 0, 0, 0);
+    return hourlyTimes.indexOf(Math.floor(t.getTime() / 1000));
+}
+
+function fmtTime(d) {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+function pad2(n) { return n < 10 ? '0' + n : String(n); }
+function dayDiffMs(a, b) { return Math.round((a - b) / 86400000); }
+
+/* ── DYNAMIC ATMOSPHERIC BACKGROUND ── */
+function applyAtmosphericBackground(sunAltDeg, weatherCode) {
+    let palette;
+    if      (sunAltDeg < -12)  palette = ["#01010b", "#0a1535", "#1a2548"];
+    else if (sunAltDeg <  -6)  palette = ["#0a1029", "#1a1f4a", "#2c2a5e"];
+    else if (sunAltDeg <   0)  palette = ["#1d1b3e", "#3d2952", "#693455"];
+    else if (sunAltDeg <   6)  palette = ["#3d2845", "#80465b", "#c2734a"];
+    else if (sunAltDeg <  20)  palette = ["#1d3d57", "#2c5a73", "#4a7e8a"];
+    else                       palette = ["#0f2027", "#203a43", "#2c5364"];
+
+    const isOvercast = weatherCode === 3;
+    const isWet = weatherCode >= 51 && weatherCode <= 82;
+    const isFoggy = weatherCode === 45 || weatherCode === 48;
+    if (isWet || isFoggy)       palette = palette.map(c => mixColor(c, "#3a4147", 0.45));
+    else if (isOvercast)        palette = palette.map(c => mixColor(c, "#404a52", 0.30));
+
+    document.documentElement.style.setProperty('--bg-start', palette[0]);
+    document.documentElement.style.setProperty('--bg-mid',   palette[1]);
+    document.documentElement.style.setProperty('--bg-end',   palette[2]);
+}
+
+function mixColor(hexA, hexB, weight) {
+    const a = parseColor(hexA), b = parseColor(hexB);
+    const r = Math.round(a[0] * (1 - weight) + b[0] * weight);
+    const g = Math.round(a[1] * (1 - weight) + b[1] * weight);
+    const bl = Math.round(a[2] * (1 - weight) + b[2] * weight);
+    return `rgb(${r}, ${g}, ${bl})`;
+}
+function parseColor(h) {
+    if (h.startsWith("rgb")) {
+        const m = h.match(/\d+/g);
+        return [+m[0], +m[1], +m[2]];
+    }
+    h = h.replace('#','');
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+
+/* ── SOLSTICE PROGRESS ── */
+function getDaylightSeconds(date) {
+    const t = SunCalc.getTimes(date, LAT, LON);
+    return (t.sunset - t.sunrise) / 1000;
+}
+
+function getSolsticeContext(today) {
+    const year = today.getFullYear();
+    const winterThis = new Date(year, 11, 21);
+    const winterPrev = new Date(year - 1, 11, 21);
+    const summerThis = new Date(year, 5, 21);
+    const summerPrev = new Date(year - 1, 5, 21);
+
+    const lastWinter = today >= winterThis ? winterThis : winterPrev;
+    const nextWinter = today >= winterThis ? new Date(year + 1, 11, 21) : winterThis;
+    const lastSummer = today >= summerThis ? summerThis : summerPrev;
+    const nextSummer = today >= summerThis ? new Date(year + 1, 5, 21) : summerThis;
+
+    const winterSec = getDaylightSeconds(lastWinter);
+    const summerSec = getDaylightSeconds(lastSummer > lastWinter ? lastSummer : nextSummer);
+    const todaySec  = getDaylightSeconds(today);
+
+    const range    = summerSec - winterSec;
+    const progress = Math.max(0, Math.min(1, (todaySec - winterSec) / range));
+    const ascending = nextSummer < nextWinter;
+
+    return { progress, ascending, todayDaylight: todaySec, winterDaylight: winterSec, summerDaylight: summerSec, lastWinter, nextWinter };
+}
+
+function renderSolsticeArc(ctx) {
+    const svg = document.getElementById('solstice-svg');
+    const W = 380, H = 100;
+    const padX = 18, padY = 12;
+    const cycleStart = ctx.lastWinter;
+    const cycleEnd   = ctx.nextWinter;
+    const cycleMs    = cycleEnd - cycleStart;
+    const todayPos   = (Date.now() - cycleStart) / cycleMs;
+
+    const N = 60;
+    const points = [];
+    for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        const norm = (1 - Math.cos(t * 2 * Math.PI)) / 2;
+        const x = padX + t * (W - 2 * padX);
+        const y = (H - padY) - norm * (H - 2 * padY);
+        points.push({ x, y, t });
+    }
+    const dPath = points.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
+    const passedPts = points.filter(p => p.t <= todayPos);
+    const dPassed = passedPts.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
+
+    const tNorm = (1 - Math.cos(todayPos * 2 * Math.PI)) / 2;
+    const markerX = padX + todayPos * (W - 2 * padX);
+    const markerY = (H - padY) - tNorm * (H - 2 * padY);
+
+    const winterY = H - padY;
+    const summerY = padY;
+    const summerX = padX + 0.5 * (W - 2 * padX);
+
+    svg.innerHTML = `
+        <line class="solstice-baseline" x1="${padX}" y1="${winterY}" x2="${W-padX}" y2="${winterY}"/>
+        <line class="solstice-baseline" x1="${padX}" y1="${summerY}" x2="${W-padX}" y2="${summerY}"/>
+        <path class="solstice-curve" d="${dPath}"/>
+        ${dPassed ? `<path class="solstice-curve-passed" d="${dPassed}"/>` : ''}
+        <circle class="solstice-marker-glow" cx="${markerX}" cy="${markerY}" r="9"/>
+        <circle class="solstice-marker"      cx="${markerX}" cy="${markerY}" r="4.5"/>
+        <text class="solstice-label" x="${padX}"   y="${winterY+10}" text-anchor="start">Dec 21</text>
+        <text class="solstice-label" x="${summerX}" y="${summerY-4}"  text-anchor="middle">Jun 21</text>
+        <text class="solstice-label" x="${W-padX}" y="${winterY+10}" text-anchor="end">Dec 21</text>
+    `;
+
+    const pct = Math.round(ctx.progress * 100);
+    document.getElementById('solstice-percent').innerText = pct + "%";
+    document.getElementById('solstice-direction').innerText =
+        ctx.ascending ? "to peak light" : "above winter low";
+
+    const todayMin = Math.floor(ctx.todayDaylight / 60);
+    const winterMin = Math.floor(ctx.winterDaylight / 60);
+    const deltaMin = todayMin - winterMin;
+    const dh = Math.floor(deltaMin / 60);
+    const dm = deltaMin % 60;
+    document.getElementById('daylight-big').innerText = `+${dh}h ${pad2(dm)}m`;
+    document.getElementById('vs-winter').innerText = "more than longest night";
+}
+
+/* ── BEST / WORST DAYS ── */
+function findBestWorstDays(daily, hourly) {
+    const days = [];
+    for (let i = 1; i < Math.min(8, daily.time.length); i++) {
+        const dayObj = new Date(daily.time[i] * 1000);
+        dayObj.setHours(0, 0, 0, 0);
+        const noonIdx = findHourIndex(hourly.time, dayObj, 12);
+        if (noonIdx === -1) continue;
+        const temp   = hourly.temperature_2m[noonIdx];
+        const wind   = hourly.wind_speed_10m[noonIdx];
+        const precip = hourly.precipitation[noonIdx];
+        const code   = hourly.weather_code[noonIdx];
+        const grade  = calculateGrade(temp, wind, precip, code, dayObj.getMonth());
+        days.push({
+            date: dayObj, score: grade.score, grade,
+            high: Math.round(daily.temperature_2m_max[i]),
+            condition: weatherShort(code),
+            sunset: SunCalc.getTimes(dayObj, LAT, LON).sunset,
+        });
+    }
+    if (!days.length) return null;
+    let best = days[0], worst = days[0];
+    for (const d of days) {
+        if (d.score > best.score) best = d;
+        if (d.score < worst.score) worst = d;
+    }
+    return (best.score === worst.score) ? { best, worst: null } : { best, worst };
+}
+
+function renderFeaturedDay(slotEl, d, type) {
+    const dayName = d.date.toLocaleDateString('en-US', { weekday: 'long' });
+    const dateStr = d.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    slotEl.className = `featured-day is-${type}`;
+    slotEl.innerHTML = `
+        <div class="grade-circle" style="color:${d.grade.color}">${d.grade.letter}</div>
+        <div class="featured-content">
+            <div class="featured-label">${type === 'best' ? '☀️ Best Day Ahead' : '🌧 Skip This Day'}</div>
+            <div class="featured-day-name">${dayName} · ${dateStr}</div>
+            <div class="featured-detail">${d.high}°F · ${d.condition} · sunset ${fmtTime(d.sunset)}</div>
+        </div>
+    `;
+}
+
+function renderBestWorst(daily, hourly) {
+    const result = findBestWorstDays(daily, hourly);
+    if (!result) return;
+    document.getElementById('featured-card').style.display = 'block';
+    const bestDiv = document.createElement('div');
+    document.getElementById('best-day-slot').appendChild(bestDiv);
+    renderFeaturedDay(bestDiv, result.best, 'best');
+    if (result.worst && result.worst.score < 76) {
+        const worstDiv = document.createElement('div');
+        document.getElementById('worst-day-slot').appendChild(worstDiv);
+        renderFeaturedDay(worstDiv, result.worst, 'worst');
+    }
+}
+
+/* ── SUN POSITION ARC ── */
+function renderSunArc(now) {
+    const svg = document.getElementById('sun-arc-svg');
+    const W = 380, H = 130;
+    const padX = 24, padTop = 18, baseY = H - 22;
+
+    const times = SunCalc.getTimes(now, LAT, LON);
+    const sunrise = times.sunrise.getTime();
+    const sunset  = times.sunset.getTime();
+    const nowMs   = now.getTime();
+    const noonPos = SunCalc.getPosition(times.solarNoon, LAT, LON);
+    const peakAltDeg = noonPos.altitude * 180 / Math.PI;
+
+    const N = 80;
+    const points = [];
+    for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        const ms = sunrise + t * (sunset - sunrise);
+        const alt = SunCalc.getPosition(new Date(ms), LAT, LON).altitude * 180 / Math.PI;
+        const x = padX + t * (W - 2 * padX);
+        const altRatio = Math.max(0, alt / peakAltDeg);
+        const y = baseY - altRatio * (baseY - padTop);
+        points.push({ x, y, t, ms, alt });
+    }
+    const dFull = points.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+
+    const isUp = (nowMs >= sunrise && nowMs <= sunset);
+    let currentAlt = SunCalc.getPosition(now, LAT, LON).altitude * 180 / Math.PI;
+
+    if (isUp) {
+        const t = (nowMs - sunrise) / (sunset - sunrise);
+        const markerX = padX + t * (W - 2 * padX);
+        const altRatio = Math.max(0, currentAlt / peakAltDeg);
+        const markerY = baseY - altRatio * (baseY - padTop);
+        const passed = points.filter(p => p.ms <= nowMs);
+        const dPassed = passed.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+        svg.innerHTML = `
+            <line class="sun-horizon" x1="0" y1="${baseY}" x2="${W}" y2="${baseY}"/>
+            <path class="sun-arc-path" d="${dFull}"/>
+            ${dPassed ? `<path class="sun-arc-passed" d="${dPassed}"/>` : ''}
+            <circle class="sun-marker-glow" cx="${markerX}" cy="${markerY}" r="11"/>
+            <circle class="sun-marker"      cx="${markerX}" cy="${markerY}" r="6"/>
+            <text class="sun-arc-label" x="${padX}"   y="${baseY+14}" text-anchor="start">${fmtTime(times.sunrise)}</text>
+            <text class="sun-arc-label" x="${W/2}"    y="${baseY+14}" text-anchor="middle">Solar Noon ${fmtTime(times.solarNoon)}</text>
+            <text class="sun-arc-label" x="${W-padX}" y="${baseY+14}" text-anchor="end">${fmtTime(times.sunset)}</text>
+        `;
+    } else {
+        svg.innerHTML = `
+            <line class="sun-horizon" x1="0" y1="${baseY}" x2="${W}" y2="${baseY}"/>
+            <path class="sun-arc-path" d="${dFull}"/>
+            <text class="sun-arc-label" x="${padX}"   y="${baseY+14}" text-anchor="start">${fmtTime(times.sunrise)}</text>
+            <text class="sun-arc-label" x="${W/2}"    y="${baseY+14}" text-anchor="middle">Below Horizon</text>
+            <text class="sun-arc-label" x="${W-padX}" y="${baseY+14}" text-anchor="end">${fmtTime(times.sunset)}</text>
+        `;
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // GRADE SYSTEM v3 — TWO-COMPONENT APPROACH
-    //
-    // Component A — CONDITIONS (60% weight): sky, wind, precipitation.
-    //   Fully ABSOLUTE. Rain is always bad. Clear sky is always good.
-    //   Temperature plays no role here.
-    //
-    // Component B — TEMPERATURE (40% weight): RELATIVE to NYC monthly avg.
-    //   Scored by how close the hourly temp is to the universal ideal (68°F)
-    //   compared to how close the monthly average high is to that ideal.
-    //   → A 38°F January day that's 8° above average earns real credit.
-    //   → A 93°F July day that's 8° above average loses real credit.
-    //   → Average for the month always lands at "C" (score 70).
-    //
-    // Net effect: worst winter days grade out as C/D (not a wall of Fs),
-    //   the best January day can reach B+, genuinely nice spring/fall days
-    //   still crack A, and conditions (rain/wind) dominate when they're bad.
-    // ─────────────────────────────────────────────────────────────
+    const azDeg = (SunCalc.getPosition(now, LAT, LON).azimuth * 180 / Math.PI + 180) % 360;
+    document.getElementById('sun-altitude').innerHTML = `Altitude <strong>${Math.round(currentAlt)}°</strong>`;
+    document.getElementById('sun-azimuth').innerHTML  = `Azimuth <strong>${compassFromDeg(azDeg)}</strong> (${Math.round(azDeg)}°)`;
+    return { altitude: currentAlt };
+}
 
-    // NOAA 30-year normals for Central Park, Jan–Dec (°F)
-    const NYC_AVG_HIGH = [39, 42, 51, 62, 72, 80, 85, 83, 76, 64, 53, 43];
-    const MONTH_NAMES  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const IDEAL_TEMP   = 68; // °F — the comfortable sweet spot
+function compassFromDeg(deg) {
+    const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+    return dirs[Math.round(deg / 22.5) % 16];
+}
 
-    /* ── COMPONENT A: sky + wind + precip (no temperature) ── */
-    function conditionsScore(code, wind, precip) {
-        let s = 100;
+/* ── LIGHT SCHEDULE ── */
+function renderLightSchedule(now) {
+    const t = SunCalc.getTimes(now, LAT, LON);
+    const events = [
+        { icon: "🌌", label: "Dawn (civil twilight)", time: t.dawn },
+        { icon: "🌅", label: "Sunrise", time: t.sunrise },
+        { icon: "✨", label: "Morning golden hour ends", time: t.goldenHourEnd },
+        { icon: "☀️", label: "Solar noon", time: t.solarNoon },
+        { icon: "✨", label: "Evening golden hour begins", time: t.goldenHour },
+        { icon: "🌇", label: "Sunset", time: t.sunset },
+        { icon: "🌆", label: "Dusk (civil twilight)", time: t.dusk },
+    ].filter(e => e.time && !isNaN(e.time.getTime()));
 
-        // Sky / precipitation codes
-        if      (code === 0)                  s +=  5;  // Clear — bonus
-        else if (code === 1)                  s -=  0;  // Mainly clear
-        else if (code === 2)                  s -= 10;  // Partly cloudy
-        else if (code === 3)                  s -= 22;  // Overcast
-        else if (code === 45 || code === 48)  s -= 30;  // Fog
-        else if (code === 51)                 s -= 27;  // Light drizzle
-        else if (code === 53)                 s -= 35;
-        else if (code === 55)                 s -= 43;
-        else if (code === 56 || code === 57)  s -= 50;  // Freezing drizzle
-        else if (code === 61)                 s -= 37;  // Light rain
-        else if (code === 63)                 s -= 52;
-        else if (code === 65)                 s -= 66;  // Heavy rain
-        else if (code === 66 || code === 67)  s -= 58;  // Freezing rain
-        else if (code === 71)                 s -= 18;  // Light snow (scenic)
-        else if (code === 73)                 s -= 40;
-        else if (code === 75 || code === 77)  s -= 55;  // Heavy snow
-        else if (code === 80)                 s -= 35;  // Showers
-        else if (code === 81)                 s -= 47;
-        else if (code === 82)                 s -= 62;  // Heavy showers
-        else if (code >= 95)                  s -= 78;  // Thunderstorms
-
-        // Wind (NYC canyons amplify everything)
-        if      (wind <=  7) s -=  0;  // Calm — ideal
-        else if (wind <= 13) s -=  8;  // Noticeable
-        else if (wind <= 20) s -= 20;  // Annoying
-        else if (wind <= 28) s -= 33;  // Bad
-        else                 s -= 47;  // Brutal
-
-        // Heavy precip accumulation on top of code
-        if (precip > 0.05) s -= 10;
-
-        return Math.min(105, s); // slight overflow headroom for clear bonus
+    const nowMs = now.getTime();
+    let activeIdx = -1;
+    for (let i = events.length - 1; i >= 0; i--) {
+        if (events[i].time.getTime() <= nowMs) { activeIdx = i; break; }
     }
 
-    /* ── COMPONENT B: temperature relative to seasonal average ── */
-    function tempRelativeScore(temp, month) {
-        const avg     = NYC_AVG_HIGH[month];
-        const avgDist = Math.abs(avg  - IDEAL_TEMP); // how far avg is from ideal
-        const myDist  = Math.abs(temp - IDEAL_TEMP); // how far today is from ideal
-        // Positive = today is closer to ideal than the month usually is = good
-        const improvement = avgDist - myDist;
-        // Base 70 = "average for the month". Each °F improvement = +1.8 pts.
-        const score = 70 + improvement * 1.8;
-        return Math.max(15, Math.min(100, score));
+    document.getElementById('light-schedule').innerHTML = events.map((e, i) => `
+        <div class="schedule-row${i === activeIdx ? ' is-now' : ''}">
+            <span class="schedule-icon">${e.icon}</span>
+            <span class="schedule-label">${e.label}${i === activeIdx ? ' · now' : ''}</span>
+            <span class="schedule-time">${fmtTime(e.time)}</span>
+        </div>
+    `).join('');
+}
+
+/* ── HOUR-BY-HOUR ── */
+function renderHourlyStrip(hourly) {
+    const container = document.getElementById('hourly-strip');
+    const now = new Date();
+    const currentHour = now.getHours();
+    const DAYS = 3;
+
+    let html = '';
+    for (let dayOffset = 0; dayOffset < DAYS; dayOffset++) {
+        const day = new Date(now);
+        day.setDate(now.getDate() + dayOffset);
+        day.setHours(0, 0, 0, 0);
+        const month = day.getMonth();
+
+        // Skip "today" pill if no remaining daytime hours
+        let hasHours = false;
+        for (let h = 6; h <= 21; h++) {
+            if (dayOffset === 0 && h < currentHour) continue;
+            if (findHourIndex(hourly.time, day, h) !== -1) { hasHours = true; break; }
+        }
+        if (!hasHours) continue;
+
+        const dayLabel = dayOffset === 0 ? "Today"
+                       : dayOffset === 1 ? "Tmrw"
+                       : day.toLocaleDateString('en-US', { weekday: 'short' });
+        const dateLabel = day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        html += `<div class="hour-day-pill">
+            <span class="hour-day-pill-day">${dayLabel}</span>
+            <span class="hour-day-pill-date">${dateLabel}</span>
+        </div>`;
+
+        for (let h = 6; h <= 21; h++) {
+            if (dayOffset === 0 && h < currentHour) continue;
+            const idx = findHourIndex(hourly.time, day, h);
+            if (idx === -1) continue;
+
+            const temp   = hourly.temperature_2m[idx];
+            const wind   = hourly.wind_speed_10m[idx];
+            const precip = hourly.precipitation[idx];
+            const code   = hourly.weather_code[idx];
+            const g      = calculateGrade(temp, wind, precip, code, month);
+            const isNow  = (dayOffset === 0 && h === currentHour);
+            const label  = h === 12 ? "12pm"
+                         : h > 12   ? `${h - 12}pm`
+                                    : `${h}am`;
+
+            html += `
+                <div class="hour-cell${isNow ? ' is-now' : ''}">
+                    <span class="hour-time">${label}</span>
+                    <span class="hour-temp">${Math.round(temp)}°</span>
+                    <span class="hour-grade" style="color:${g.color}">${g.letter}</span>
+                </div>
+            `;
+        }
     }
+    container.innerHTML = html;
+}
 
-    /* ── COMBINED GRADE ── */
-    function calculateGrade(temp, wind, precip, code, month) {
-        const cScore = conditionsScore(code, wind, precip);
-        const tScore = tempRelativeScore(temp, month);
-        const final  = Math.min(100, Math.round(0.60 * cScore + 0.40 * tScore));
+/* ── TOMORROW GRADES ── */
+function renderTomorrowGrades(hourly) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const month = tomorrow.getMonth();
+    const isWeekend = (tomorrow.getDay() === 0 || tomorrow.getDay() === 6);
+    const slots = [
+        { hour: 8,  label: isWeekend ? "Morning"   : "AM Commute" },
+        { hour: 12, label: "Midday" },
+        { hour: 18, label: isWeekend ? "Evening"   : "PM Commute" },
+    ];
+    let html = "";
+    slots.forEach(slot => {
+        const idx = findHourIndex(hourly.time, tomorrow, slot.hour);
+        if (idx === -1) return;
+        const temp   = hourly.temperature_2m[idx];
+        const wind   = hourly.wind_speed_10m[idx];
+        const precip = hourly.precipitation[idx];
+        const code   = hourly.weather_code[idx];
+        const grade  = calculateGrade(temp, wind, precip, code, month);
+        const tag    = seasonalTag(temp, month);
+        html += `
+            <div class="grade-box">
+                <span class="grade-time">${slot.label}</span>
+                <span class="grade-letter" style="color:${grade.color}">${grade.letter}</span>
+                <span class="grade-sub">${Math.round(temp)}° · ${Math.round(wind)}mph</span>
+                <span class="grade-tag">${tag}</span>
+            </div>`;
+    });
+    document.getElementById('grades-1').innerHTML = html;
+    document.getElementById('grade-label-1').innerText =
+        `TOMORROW · ${tomorrow.toLocaleDateString('en-US', { weekday: 'long' })}`;
+}
 
-        let letter, color;
-        if      (final >= 96) { letter = "A+"; color = "var(--grade-a)"; }
-        else if (final >= 90) { letter = "A";  color = "var(--grade-a)"; }
-        else if (final >= 83) { letter = "B+"; color = "var(--grade-b)"; }
-        else if (final >= 76) { letter = "B";  color = "var(--grade-b)"; }
-        else if (final >= 67) { letter = "C+"; color = "var(--grade-c)"; }
-        else if (final >= 57) { letter = "C";  color = "var(--grade-c)"; }
-        else if (final >= 42) { letter = "D";  color = "var(--grade-d)"; }
-        else                  { letter = "F";  color = "var(--grade-f)"; }
+/* ── 16-DAY OUTLOOK ── */
+function renderOutlookStrip(daily, hourly) {
+    const container = document.getElementById('outlook-strip');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        return { letter, color, score: final };
+    let html = "";
+    for (let i = 0; i < daily.time.length; i++) {
+        const dayObj = new Date(daily.time[i] * 1000);
+        dayObj.setHours(0, 0, 0, 0);
+        const noonIdx = findHourIndex(hourly.time, dayObj, 12);
+        if (noonIdx === -1) continue;
+        const temp   = hourly.temperature_2m[noonIdx];
+        const wind   = hourly.wind_speed_10m[noonIdx];
+        const precip = hourly.precipitation[noonIdx];
+        const code   = hourly.weather_code[noonIdx];
+        const grade  = calculateGrade(temp, wind, precip, code, dayObj.getMonth());
+        const isToday = (dayObj.getTime() === today.getTime());
+        const dayLabel = isToday ? "Today" :
+            dayObj.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 3);
+        html += `
+            <div class="outlook-cell${isToday ? ' is-today' : ''}">
+                <span class="outlook-day">${dayLabel}</span>
+                <span class="outlook-grade" style="color:${grade.color}">${grade.letter}</span>
+                <span class="outlook-temp">${Math.round(daily.temperature_2m_max[i])}°</span>
+            </div>
+        `;
     }
+    container.innerHTML = html;
+}
 
-    /* ── SEASONAL CONTEXT LABEL ── */
-    function seasonalTag(temp, month) {
-        const delta = Math.round(temp - NYC_AVG_HIGH[month]);
-        const mon   = MONTH_NAMES[month];
-        if      (delta >=  15) return `${delta}° above avg for ${mon}`;
-        else if (delta >=   6) return `Warmer than avg for ${mon}`;
-        else if (delta >=  -5) return `Near avg for ${mon}`;
-        else if (delta >= -14) return `Cooler than avg for ${mon}`;
-        else                   return `${Math.abs(delta)}° below avg for ${mon}`;
+/* ── NOTABLE FIRSTS ── */
+function findNotableFirsts(now) {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const firsts = [];
+
+    const SUNSET = [
+        { h: 17, m:  0, label: "5:00 PM" }, { h: 17, m: 30, label: "5:30 PM" },
+        { h: 18, m:  0, label: "6:00 PM" }, { h: 18, m: 30, label: "6:30 PM" },
+        { h: 19, m:  0, label: "7:00 PM" }, { h: 19, m: 30, label: "7:30 PM" },
+        { h: 20, m:  0, label: "8:00 PM" },
+    ];
+    const SUNRISE = [
+        { h: 7, m:  0, label: "7:00 AM" }, { h: 6, m: 30, label: "6:30 AM" },
+        { h: 6, m:  0, label: "6:00 AM" }, { h: 5, m: 30, label: "5:30 AM" },
+    ];
+
+    const today_t = SunCalc.getTimes(today, LAT, LON);
+    const tSsMin = today_t.sunset.getHours()  * 60 + today_t.sunset.getMinutes();
+    const tSrMin = today_t.sunrise.getHours() * 60 + today_t.sunrise.getMinutes();
+
+    SUNSET.forEach(thr => {
+        const thrMin = thr.h * 60 + thr.m;
+        if (tSsMin < thrMin) return;
+        let probe = new Date(today);
+        let crossed = today;
+        for (let back = 0; back < 60; back++) {
+            probe.setDate(probe.getDate() - 1);
+            const t = SunCalc.getTimes(probe, LAT, LON).sunset;
+            const ssMin = t.getHours() * 60 + t.getMinutes();
+            if (ssMin < thrMin) { crossed = new Date(probe); crossed.setDate(crossed.getDate() + 1); break; }
+        }
+        const daysAgo = dayDiffMs(today, crossed);
+        if (daysAgo >= 0 && daysAgo <= 14) {
+            firsts.push({ icon: "🌇", text: `Sunset crossed ${thr.label}`, when: daysAgoText(daysAgo), sortVal: -daysAgo });
+        }
+    });
+
+    SUNRISE.forEach(thr => {
+        const thrMin = thr.h * 60 + thr.m;
+        if (tSrMin > thrMin) return;
+        let probe = new Date(today);
+        let crossed = today;
+        for (let back = 0; back < 60; back++) {
+            probe.setDate(probe.getDate() - 1);
+            const t = SunCalc.getTimes(probe, LAT, LON).sunrise;
+            const srMin = t.getHours() * 60 + t.getMinutes();
+            if (srMin > thrMin) { crossed = new Date(probe); crossed.setDate(crossed.getDate() + 1); break; }
+        }
+        const daysAgo = dayDiffMs(today, crossed);
+        if (daysAgo >= 0 && daysAgo <= 14) {
+            firsts.push({ icon: "🌅", text: `Sunrise crossed before ${thr.label}`, when: daysAgoText(daysAgo), sortVal: -daysAgo });
+        }
+    });
+
+    firsts.sort((a, b) => b.sortVal - a.sortVal);
+    return firsts.slice(0, 4);
+}
+
+function daysAgoText(d) {
+    if (d === 0) return "today";
+    if (d === 1) return "yesterday";
+    if (d < 7)   return `${d} days ago`;
+    return `${Math.floor(d / 7)}w ago`;
+}
+
+function renderNotableFirsts(now) {
+    const firsts = findNotableFirsts(now);
+    if (!firsts.length) return;
+    document.getElementById('firsts-card').style.display = 'block';
+    document.getElementById('firsts-list').innerHTML = firsts.map(f => `
+        <div class="first-item">
+            <span class="first-icon">${f.icon}</span>
+            <span class="first-text">${f.text}</span>
+            <span class="first-when">${f.when}</span>
+        </div>
+    `).join('');
+}
+
+/* ── DST ── */
+function getDSTDate(year) {
+    const march1 = new Date(year, 2, 1);
+    const dow = march1.getDay();
+    const daysToFirstSun = (dow === 0) ? 0 : 7 - dow;
+    return new Date(year, 2, 1 + daysToFirstSun + 7, 2, 0, 0, 0);
+}
+function getFallBackDate(year) {
+    const nov1 = new Date(year, 10, 1);
+    const dow = nov1.getDay();
+    const daysToFirstSun = (dow === 0) ? 0 : 7 - dow;
+    return new Date(year, 10, 1 + daysToFirstSun, 2, 0, 0, 0);
+}
+function getNextDSTTransition() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const spring = getDSTDate(year);
+    const fall   = getFallBackDate(year);
+    if (now < spring) return { date: spring, label: 'Spring Forward', icon: '🕐' };
+    if (now < fall)   return { date: fall,   label: 'Fall Back',      icon: '🕐' };
+    return { date: getDSTDate(year + 1), label: 'Spring Forward', icon: '🕐' };
+}
+function initDSTCountdown() {
+    let transition = getNextDSTTransition();
+    const titleEl = document.getElementById('dst-title');
+    titleEl.innerText = `Daylight Saving — ${transition.label}`;
+    function update() {
+        const now = new Date();
+        if (now >= transition.date) {
+            transition = getNextDSTTransition();
+            titleEl.innerText = `Daylight Saving — ${transition.label}`;
+        }
+        const secs = Math.max(0, Math.floor((transition.date - now) / 1000));
+        document.getElementById('dst-days').innerText  = Math.floor(secs / 86400);
+        document.getElementById('dst-hours').innerText = String(Math.floor(secs / 3600) % 24).padStart(2,'0');
+        document.getElementById('dst-mins').innerText  = String(Math.floor(secs / 60) % 60).padStart(2,'0');
+        document.getElementById('dst-secs').innerText  = String(secs % 60).padStart(2,'0');
     }
+    update();
+    setInterval(update, 1000);
+}
 
-    // ──────────────────────────────────────────
-    // FIND HOURLY INDEX BY MATCHING ACTUAL TIMESTAMP
-    // ──────────────────────────────────────────
-    function findHourIndex(hourlyTimes, dateObj, hour) {
-        const target = new Date(dateObj);
-        target.setHours(hour, 0, 0, 0);
-        const ts = Math.floor(target.getTime() / 1000);
-        return hourlyTimes.indexOf(ts);
-    }
+/* ── MILESTONES ── */
+function generateMilestones() {
+    const container = document.getElementById('milestones-container');
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const year  = now.getFullYear();
 
-    // ──────────────────────────────────────────
-    // RENDER GRADE BOXES
-    // ──────────────────────────────────────────
-    function renderGrades(hourly) {
-        const today = new Date();
+    const SUNSET_TARGETS = [
+        { h: 17, m:  0, label: "5:00 PM" }, { h: 17, m: 30, label: "5:30 PM" },
+        { h: 18, m:  0, label: "6:00 PM" }, { h: 18, m: 30, label: "6:30 PM" },
+        { h: 19, m:  0, label: "7:00 PM" }, { h: 19, m: 30, label: "7:30 PM" },
+        { h: 20, m:  0, label: "8:00 PM" },
+    ].map(t => ({ ...t, found: false }));
+    const SUNRISE_TARGETS = [
+        { h: 7, m:  0, label: "7:00 AM" }, { h: 6, m: 30, label: "6:30 AM" },
+        { h: 6, m:  0, label: "6:00 AM" }, { h: 5, m: 30, label: "5:30 AM" },
+    ].map(t => ({ ...t, found: false }));
 
-        [0, 1].forEach(offset => {
-            const dayObj    = new Date(today);
-            dayObj.setDate(today.getDate() + offset);
-            const month     = dayObj.getMonth();
-            const isWeekend = (dayObj.getDay() === 0 || dayObj.getDay() === 6);
+    const yest = new Date(today); yest.setDate(today.getDate() - 1);
+    const yT   = SunCalc.getTimes(yest, LAT, LON);
+    const ySs  = yT.sunset.getHours()  * 60 + yT.sunset.getMinutes();
+    const ySr  = yT.sunrise.getHours() * 60 + yT.sunrise.getMinutes();
+    SUNSET_TARGETS.forEach(t  => { if (ySs >= (t.h*60+t.m)) t.found = true; });
+    SUNRISE_TARGETS.forEach(t => { if (ySr <= (t.h*60+t.m)) t.found = true; });
 
-            const slots = [
-                { hour: 8,  label: isWeekend ? "Morning"   : "AM Commute" },
-                { hour: 12, label: "Midday" },
-                { hour: 18, label: isWeekend ? "Evening"   : "PM Commute" },
-            ];
+    const nextDST       = getNextDSTTransition();
+    const equinoxSpring = new Date(year, 2, 20);
+    const solsticeSum   = new Date(year, 5, 21);
+    const equinoxFall   = new Date(year, 8, 22);
+    const solsticeWin   = new Date(year, 11, 21);
 
-            let html = "";
-            slots.forEach(slot => {
-                const idx = findHourIndex(hourly.time, dayObj, slot.hour);
-                if (idx === -1) return;
+    const FIXED_EVENTS = [
+        { date: nextDST.date,  label: `DST — ${nextDST.label}`,           icon: nextDST.icon, ts: nextDST.date.getTime() },
+        { date: equinoxSpring, label: "Spring Equinox",                    icon: "🌸", ts: equinoxSpring.getTime() },
+        { date: solsticeSum,   label: "Summer Solstice — Peak Light",      icon: "☀️", ts: solsticeSum.getTime() },
+        { date: equinoxFall,   label: "Autumn Equinox",                    icon: "🍂", ts: equinoxFall.getTime() },
+        { date: solsticeWin,   label: "Winter Solstice — Longest Night",   icon: "❄️", ts: solsticeWin.getTime() },
+    ].filter(e => e.date >= today);
 
-                const temp   = hourly.temperature_2m[idx];
-                const wind   = hourly.wind_speed_10m[idx];
-                const precip = hourly.precipitation[idx];
-                const code   = hourly.weather_code[idx];
-                const grade  = calculateGrade(temp, wind, precip, code, month);
-                const tag    = seasonalTag(temp, month);
+    const found = [...FIXED_EVENTS.map(e => ({ date: e.date, label: e.label, icon: e.icon, sortVal: e.ts }))];
 
-                html += `
-                    <div class="grade-box">
-                        <span class="grade-time">${slot.label}</span>
-                        <span class="grade-letter" style="color:${grade.color}">${grade.letter}</span>
-                        <span class="grade-sub">${Math.round(temp)}° · ${Math.round(wind)}mph</span>
-                        <span class="grade-tag">${tag}</span>
-                    </div>`;
-            });
-
-            document.getElementById(`grades-${offset}`).innerHTML = html;
-            const dayName = dayObj.toLocaleDateString('en-US', { weekday: 'long' });
-            document.getElementById(`grade-label-${offset}`).innerText =
-                `${offset === 0 ? 'TODAY' : 'TOMORROW'} · ${dayName}`;
-
-            // Header grade = noon snapshot of today
-            if (offset === 0) {
-                const noonIdx = findHourIndex(hourly.time, dayObj, 12);
-                if (noonIdx !== -1) {
-                    const g = calculateGrade(
-                        hourly.temperature_2m[noonIdx],
-                        hourly.wind_speed_10m[noonIdx],
-                        hourly.precipitation[noonIdx],
-                        hourly.weather_code[noonIdx],
-                        month
-                    );
-                    const el = document.getElementById('today-grade-letter');
-                    el.innerText  = g.letter;
-                    el.style.color = g.color;
-                    document.getElementById('today-seasonal-tag').innerText =
-                        seasonalTag(hourly.temperature_2m[noonIdx], month);
-                }
+    const endDate = new Date(year, 5, 25);
+    let check = new Date(today);
+    for (let day = 0; day <= 180 && check <= endDate; day++) {
+        const times = SunCalc.getTimes(check, LAT, LON);
+        const ssMins = times.sunset.getHours()  * 60 + times.sunset.getMinutes();
+        const srMins = times.sunrise.getHours() * 60 + times.sunrise.getMinutes();
+        const ts = check.getTime();
+        SUNSET_TARGETS.forEach(t => {
+            if (!t.found && ssMins >= (t.h*60+t.m)) {
+                found.push({ date: new Date(check), label: `Sunset after ${t.label}`, icon: "🌇", sortVal: ts*10 + ssMins });
+                t.found = true;
             }
         });
-    }
-
-    // ──────────────────────────────────────────
-    // DST DATE — second Sunday in March (fixed)
-    // ──────────────────────────────────────────
-    function getDSTDate(year) {
-        const march1 = new Date(year, 2, 1);
-        const dow = march1.getDay(); // 0=Sun
-        const daysToFirstSun = (dow === 0) ? 0 : 7 - dow;
-        const secondSunday = 1 + daysToFirstSun + 7;
-        return new Date(year, 2, secondSunday, 2, 0, 0, 0);
-    }
-
-    function initDSTCountdown() {
-        function update() {
-            const now = new Date();
-            let dst = getDSTDate(now.getFullYear());
-            if (now >= dst) dst = getDSTDate(now.getFullYear() + 1);
-
-            const secs = Math.max(0, Math.floor((dst - now) / 1000));
-            const d = Math.floor(secs / 86400);
-            const h = Math.floor(secs / 3600) % 24;
-            const m = Math.floor(secs / 60)   % 60;
-            const s = secs % 60;
-
-            document.getElementById('dst-days').innerText  = d;
-            document.getElementById('dst-hours').innerText = String(h).padStart(2,'0');
-            document.getElementById('dst-mins').innerText  = String(m).padStart(2,'0');
-            document.getElementById('dst-secs').innerText  = String(s).padStart(2,'0');
-        }
-        update();
-        setInterval(update, 1000);
-    }
-
-    // ──────────────────────────────────────────
-    // MILESTONES — curated list, not every 5min
-    // ──────────────────────────────────────────
-    function generateMilestones() {
-        const container = document.getElementById('milestones-container');
-        const now  = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const year  = now.getFullYear();
-
-        // Key sunset thresholds (every 30 min, 5 PM → 8 PM)
-        const SUNSET_TARGETS = [
-            { h: 17, m:  0, label: "5:00 PM" },
-            { h: 17, m: 30, label: "5:30 PM" },
-            { h: 18, m:  0, label: "6:00 PM" },
-            { h: 18, m: 30, label: "6:30 PM" },
-            { h: 19, m:  0, label: "7:00 PM" },
-            { h: 19, m: 30, label: "7:30 PM" },
-            { h: 20, m:  0, label: "8:00 PM" },
-        ].map(t => ({ ...t, found: false }));
-
-        // Key sunrise thresholds (getting earlier)
-        const SUNRISE_TARGETS = [
-            { h: 7, m:  0, label: "7:00 AM" },
-            { h: 6, m: 30, label: "6:30 AM" },
-            { h: 6, m:  0, label: "6:00 AM" },
-            { h: 5, m: 30, label: "5:30 AM" },
-        ].map(t => ({ ...t, found: false }));
-
-        // Mark already-achieved thresholds using yesterday's times
-        const yest = new Date(today); yest.setDate(today.getDate() - 1);
-        const yT   = SunCalc.getTimes(yest, LAT, LON);
-        const ySs  = yT.sunset.getHours()  * 60 + yT.sunset.getMinutes();
-        const ySr  = yT.sunrise.getHours() * 60 + yT.sunrise.getMinutes();
-        SUNSET_TARGETS.forEach(t  => { if (ySs >= (t.h*60+t.m)) t.found = true; });
-        SUNRISE_TARGETS.forEach(t => { if (ySr <= (t.h*60+t.m)) t.found = true; });
-
-        // Fixed calendar events
-        const dstDate      = getDSTDate(year);
-        const equinoxDate  = new Date(year, 2, 20);
-        const solsticeDate = new Date(year, 5, 21);
-
-        const FIXED_EVENTS = [
-            { date: dstDate,      label: "Daylight Saving Time",  icon: "🕐", ts: dstDate.getTime() },
-            { date: equinoxDate,  label: "Spring Equinox",        icon: "🌸", ts: equinoxDate.getTime() },
-            { date: solsticeDate, label: "Summer Solstice — Peak Light", icon: "☀️", ts: solsticeDate.getTime() },
-        ].filter(e => e.date >= today);
-
-        const found = [...FIXED_EVENTS.map(e => ({
-            date: e.date, label: e.label, icon: e.icon, type: 'event',
-            sortVal: e.ts
-        }))];
-
-        // Scan ahead up to summer solstice
-        const endDate = new Date(year, 5, 25);
-        let check = new Date(today);
-
-        for (let day = 0; day <= 180 && check <= endDate; day++) {
-            const times = SunCalc.getTimes(check, LAT, LON);
-            const ssMins = times.sunset.getHours()  * 60 + times.sunset.getMinutes();
-            const srMins = times.sunrise.getHours() * 60 + times.sunrise.getMinutes();
-            const checkTs = check.getTime();
-
-            SUNSET_TARGETS.forEach(t => {
-                if (!t.found && ssMins >= (t.h*60+t.m)) {
-                    found.push({
-                        date: new Date(check),
-                        label: `Sunset after ${t.label}`,
-                        icon: "🌇",
-                        type: 'sunset',
-                        sortVal: checkTs * 10 + ssMins
-                    });
-                    t.found = true;
-                }
-            });
-
-            SUNRISE_TARGETS.forEach(t => {
-                if (!t.found && srMins <= (t.h*60+t.m)) {
-                    found.push({
-                        date: new Date(check),
-                        label: `Sunrise before ${t.label}`,
-                        icon: "🌅",
-                        type: 'sunrise',
-                        sortVal: checkTs * 10 + srMins
-                    });
-                    t.found = true;
-                }
-            });
-
-            check.setDate(check.getDate() + 1);
-        }
-
-        found.sort((a, b) => a.sortVal - b.sortVal);
-
-        if (!found.length) {
-            container.innerHTML = `<div style="color:var(--text-dim);text-align:center;padding:10px">Peak sunlight reached! Enjoy it. ☀️</div>`;
-            return;
-        }
-
-        // Group into near-term (≤21 days) and beyond
-        const NEAR_CUTOFF = new Date(today); NEAR_CUTOFF.setDate(today.getDate() + 21);
-        const near = found.filter(m => m.date <= NEAR_CUTOFF);
-        const far  = found.filter(m => m.date >  NEAR_CUTOFF);
-
-        function renderGroup(items, headerText) {
-            if (!items.length) return;
-            const div = document.createElement('div');
-            div.className = 'milestone-divider';
-            div.innerText = headerText;
-            container.appendChild(div);
-
-            items.forEach(m => {
-                const isToday = (m.date.getTime() === today.getTime());
-                const dateStr = isToday
-                    ? "Today"
-                    : m.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-
-                const el = document.createElement('div');
-                el.className = `milestone-item${isToday ? ' is-today' : ''}`;
-                el.innerHTML = `
-                    <span class="milestone-icon">${m.icon}</span>
-                    <span class="milestone-text">${m.label}</span>
-                    <span class="milestone-date">${dateStr}</span>`;
-                container.appendChild(el);
-            });
-        }
-
-        renderGroup(near, "Next 3 Weeks");
-        renderGroup(far,  "Further Out");
-    }
-
-    // ──────────────────────────────────────────
-    // FETCH WEATHER (open-meteo)
-    // ──────────────────────────────────────────
-    async function fetchWeather() {
-        try {
-            const params = [
-                `latitude=${LAT}`, `longitude=${LON}`,
-                `daily=temperature_2m_max,apparent_temperature_max`,
-                `hourly=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m`,
-                `temperature_unit=fahrenheit`, `wind_speed_unit=mph`,
-                `precipitation_unit=inch`, `timeformat=unixtime`,
-                `forecast_days=16`, `timezone=${TIMEZONE}`,
-                `_=${Date.now()}`
-            ].join('&');
-
-            const res  = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-            const data = await res.json();
-
-            renderWeather(data);
-            renderGrades(data.hourly);
-        } catch (err) {
-            console.error(err);
-            ['conditions-today','temp-feelslike','wind-today'].forEach(id => {
-                document.getElementById(id).innerText = "Offline";
-            });
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('app-content').style.display = 'flex';
-        }
-    }
-
-    function renderWeather(data) {
-        const { daily, hourly } = data;
-        const now   = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        // Current hour conditions (floor to full hour, min 8am)
-        const curHour  = Math.max(now.getHours(), 8);
-        const condIdx  = findHourIndex(hourly.time, today, curHour);
-
-        if (condIdx !== -1) {
-            document.getElementById('conditions-today').innerText =
-                weatherDesc(hourly.weather_code[condIdx]);
-            document.getElementById('wind-today').innerText =
-                `${Math.round(hourly.wind_speed_10m[condIdx])} mph`;
-        }
-
-        // High / Feels Like from daily
-        const high   = Math.round(daily.temperature_2m_max[0]);
-        const feelsH = Math.round(daily.apparent_temperature_max[0]);
-        document.getElementById('temp-feelslike').innerText = `${high}°F / ${feelsH}°F`;
-
-        // ── CHART ──
-        const ctx  = document.getElementById('hopeChart').getContext('2d');
-        const grad = ctx.createLinearGradient(0, 0, 0, 180);
-        grad.addColorStop(0, 'rgba(253,216,53,0.4)');
-        grad.addColorStop(1, 'rgba(253,216,53,0.0)');
-
-        const temps  = daily.temperature_2m_max.map(t => Math.round(t));
-        const labels = daily.time.map((ts, i) => {
-            const d = new Date(ts * 1000);
-            const day = d.getDate();
-            const mon = d.toLocaleDateString('en-US', { month: 'short' });
-            return (i === 0 || day === 1) ? `${mon} ${day}` : String(day);
-        });
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    data: temps,
-                    borderColor: '#fdd835',
-                    backgroundColor: grad,
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#fdd835',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: { label: ctx => `${ctx.raw}°F` }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: 'rgba(255,255,255,0.45)', font: { size: 10 }, maxRotation: 0 },
-                        grid: { display: false },
-                        border: { display: false }
-                    },
-                    y: {
-                        display: false,
-                        min: Math.min(...temps) - 8
-                    }
-                },
-                layout: { padding: { left: 2, right: 2, top: 8, bottom: 0 } }
+        SUNRISE_TARGETS.forEach(t => {
+            if (!t.found && srMins <= (t.h*60+t.m)) {
+                found.push({ date: new Date(check), label: `Sunrise before ${t.label}`, icon: "🌅", sortVal: ts*10 + srMins });
+                t.found = true;
             }
         });
-
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('app-content').style.display = 'flex';
+        check.setDate(check.getDate() + 1);
     }
 
-    // ──────────────────────────────────────────
-    // INIT
-    // ──────────────────────────────────────────
-    function init() {
-        const now   = new Date();
-        const times = SunCalc.getTimes(now, LAT, LON);
-        const fmt   = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-
-        document.getElementById('sun-today').innerText =
-            `${fmt(times.sunrise)} / ${fmt(times.sunset)}`;
-
-        const todayLen = (times.sunset - times.sunrise) / 1000;
-
-        const yest  = new Date(now); yest.setDate(now.getDate() - 1);
-        const yT    = SunCalc.getTimes(yest, LAT, LON);
-        const yLen  = (yT.sunset - yT.sunrise) / 1000;
-
-        const diff  = todayLen - yLen;
-        const sign  = diff >= 0 ? '+' : '−';
-        const dM    = Math.floor(Math.abs(diff) / 60);
-        const dS    = Math.floor(Math.abs(diff) % 60);
-        document.getElementById('gain-text').innerText = `${sign}${dM}m ${dS}s`;
-
-        const h  = Math.floor(todayLen / 3600);
-        const m  = Math.floor((todayLen % 3600) / 60);
-        const dl = `${h}h ${m}m`;
-        document.getElementById('daylight-total').innerText = dl;
-        document.getElementById('daylight-header').innerText = dl;
-
-        generateMilestones();
-        initDSTCountdown();
-        fetchWeather();
+    found.sort((a,b) => a.sortVal - b.sortVal);
+    if (!found.length) {
+        container.innerHTML = `<div style="color:var(--text-dim);text-align:center;padding:10px">Peak sunlight reached. ☀️</div>`;
+        return;
     }
 
-    init();
+    const NEAR_CUTOFF = new Date(today); NEAR_CUTOFF.setDate(today.getDate() + 21);
+    const near = found.filter(m => m.date <= NEAR_CUTOFF);
+    const far  = found.filter(m => m.date >  NEAR_CUTOFF);
+
+    function renderGroup(items, headerText) {
+        if (!items.length) return;
+        const div = document.createElement('div');
+        div.className = 'milestone-divider';
+        div.innerText = headerText;
+        container.appendChild(div);
+        items.forEach(m => {
+            const isToday = (m.date.getTime() === today.getTime());
+            const dateStr = isToday ? "Today"
+                : m.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            const el = document.createElement('div');
+            el.className = `milestone-item${isToday ? ' is-today' : ''}`;
+            el.innerHTML = `
+                <span class="milestone-icon">${m.icon}</span>
+                <span class="milestone-text">${m.label}</span>
+                <span class="milestone-date">${dateStr}</span>`;
+            container.appendChild(el);
+        });
+    }
+    renderGroup(near, "Next 3 Weeks");
+    renderGroup(far,  "Further Out");
+}
+
+/* ── FETCH WEATHER ── */
+async function fetchWeather() {
+    const params = [
+        `latitude=${LAT}`, `longitude=${LON}`,
+        `daily=temperature_2m_max,apparent_temperature_max`,
+        `hourly=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m`,
+        `temperature_unit=fahrenheit`, `wind_speed_unit=mph`,
+        `precipitation_unit=inch`, `timeformat=unixtime`,
+        `forecast_days=16`, `timezone=${TIMEZONE}`,
+        `_=${Date.now()}`
+    ].join('&');
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+    return res.json();
+}
+
+function renderTodayCard(data, now) {
+    const { daily, hourly } = data;
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const month = today.getMonth();
+
+    const curHour = Math.max(now.getHours(), 8);
+    const condIdx = findHourIndex(hourly.time, today, curHour);
+    if (condIdx !== -1) {
+        document.getElementById('conditions-today').innerText = weatherDesc(hourly.weather_code[condIdx]);
+        document.getElementById('wind-today').innerText = `${Math.round(hourly.wind_speed_10m[condIdx])} mph`;
+    }
+    document.getElementById('temp-feelslike').innerText =
+        `${Math.round(daily.temperature_2m_max[0])}°F / ${Math.round(daily.apparent_temperature_max[0])}°F`;
+
+    const noonIdx = findHourIndex(hourly.time, today, 12);
+    if (noonIdx !== -1) {
+        const g = calculateGrade(
+            hourly.temperature_2m[noonIdx],
+            hourly.wind_speed_10m[noonIdx],
+            hourly.precipitation[noonIdx],
+            hourly.weather_code[noonIdx],
+            month
+        );
+        const el = document.getElementById('today-grade-letter');
+        el.innerText = g.letter;
+        el.style.color = g.color;
+        document.getElementById('today-grade-tag').innerText =
+            seasonalTag(hourly.temperature_2m[noonIdx], month);
+    }
+}
+
+/* ── INIT ── */
+async function init() {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const times = SunCalc.getTimes(now, LAT, LON);
+    document.getElementById('sun-today').innerText = `${fmtTime(times.sunrise)} / ${fmtTime(times.sunset)}`;
+
+    const todayLen = (times.sunset - times.sunrise) / 1000;
+    const yest = new Date(now); yest.setDate(now.getDate() - 1);
+    const yT = SunCalc.getTimes(yest, LAT, LON);
+    const yLen = (yT.sunset - yT.sunrise) / 1000;
+    const diff = todayLen - yLen;
+    const sign = diff >= 0 ? '+' : '−';
+    const dM = Math.floor(Math.abs(diff) / 60);
+    const dS = Math.floor(Math.abs(diff) % 60);
+    document.getElementById('gain-text').innerText = `${sign}${dM}m ${dS}s`;
+    document.getElementById('gain-sub').innerText = diff >= 0
+        ? "more daylight than yesterday"
+        : "less daylight than yesterday";
+
+    // Year-ago daylight
+    const yearAgo = new Date(now); yearAgo.setFullYear(now.getFullYear() - 1);
+    const yaT = SunCalc.getTimes(yearAgo, LAT, LON);
+    const yaLen = (yaT.sunset - yaT.sunrise) / 1000;
+    const vsYear = Math.round((todayLen - yaLen) / 60);
+    document.getElementById('yearago-text').innerText =
+        `vs. one year ago: ${vsYear >= 0 ? '+' : ''}${vsYear} min`;
+
+    const h = Math.floor(todayLen / 3600);
+    const m = Math.floor((todayLen % 3600) / 60);
+    document.getElementById('daylight-total').innerText = `${h}h ${m}m`;
+
+    const solsticeCtx = getSolsticeContext(today);
+    renderSolsticeArc(solsticeCtx);
+
+    const sunInfo = renderSunArc(now);
+    renderLightSchedule(now);
+    initDSTCountdown();
+    renderNotableFirsts(now);
+    generateMilestones();
+
+    try {
+        const data = await fetchWeather();
+        renderTodayCard(data, now);
+        renderHourlyStrip(data.hourly);
+        renderTomorrowGrades(data.hourly);
+        renderOutlookStrip(data.daily, data.hourly);
+        renderBestWorst(data.daily, data.hourly);
+
+        const curHour = Math.max(now.getHours(), 8);
+        const condIdx = findHourIndex(data.hourly.time, today, curHour);
+        const curCode = condIdx !== -1 ? data.hourly.weather_code[condIdx] : 1;
+        applyAtmosphericBackground(sunInfo.altitude, curCode);
+    } catch (err) {
+        console.error(err);
+        ['conditions-today','temp-feelslike','wind-today'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = "Offline";
+        });
+        applyAtmosphericBackground(sunInfo.altitude, 1);
+    }
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('app-content').style.display = 'flex';
+
+    setInterval(() => renderSunArc(new Date()), 60000);
+}
+
+init();
 </script>
 </body>
 </html>
