@@ -428,50 +428,75 @@ const TIMEZONE = "America/New_York";
 
 const NYC_AVG_HIGH = [39, 42, 51, 62, 72, 80, 85, 83, 76, 64, 53, 43];
 const MONTH_NAMES  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const IDEAL_TEMP   = 68;
+/* Calibrated from 17-scenario ratings (May 2026): asymmetric temp curve —
+   quadratic cold penalty (cold gets worse fast), flat sweet spot 78–95°F,
+   gentle hot penalty above 95°F. Captures asymmetric preference: dislikes
+   cold sharply, loves heat. */
+const IDEAL_TEMP_LOW    = 78;
+const IDEAL_TEMP_HIGH   = 95;
+const COLD_LIN_SLOPE    = 2.0;
+const COLD_QUAD_SLOPE   = 0.03;
+const HOT_SLOPE         = 0.3;
+const WEATHER_HARSHNESS = 1.2;
+const WIND_SENSITIVITY  = 0.9;
+const CONDITIONS_WEIGHT = 0.40;
 
 /* ── GRADE ENGINE ── */
 function conditionsScore(code, wind, precip) {
-    let s = 100;
-    if      (code === 0)                  s +=  5;
-    else if (code === 1)                  s -=  0;
-    else if (code === 2)                  s -= 10;
-    else if (code === 3)                  s -= 22;
-    else if (code === 45 || code === 48)  s -= 30;
-    else if (code === 51)                 s -= 27;
-    else if (code === 53)                 s -= 35;
-    else if (code === 55)                 s -= 43;
-    else if (code === 56 || code === 57)  s -= 50;
-    else if (code === 61)                 s -= 37;
-    else if (code === 63)                 s -= 52;
-    else if (code === 65)                 s -= 66;
-    else if (code === 66 || code === 67)  s -= 58;
-    else if (code === 71)                 s -= 18;
-    else if (code === 73)                 s -= 40;
-    else if (code === 75 || code === 77)  s -= 55;
-    else if (code === 80)                 s -= 35;
-    else if (code === 81)                 s -= 47;
-    else if (code === 82)                 s -= 62;
-    else if (code >= 95)                  s -= 78;
-    if      (wind <=  7) s -=  0;
-    else if (wind <= 13) s -=  8;
-    else if (wind <= 20) s -= 20;
-    else if (wind <= 28) s -= 33;
-    else                 s -= 47;
+    let s = 100, wd = 0;
+    if      (code === 0)                  wd = -5;
+    else if (code === 1)                  wd =  0;
+    else if (code === 2)                  wd = 10;
+    else if (code === 3)                  wd = 22;
+    else if (code === 45 || code === 48)  wd = 30;
+    else if (code === 51)                 wd = 27;
+    else if (code === 53)                 wd = 35;
+    else if (code === 55)                 wd = 43;
+    else if (code === 56 || code === 57)  wd = 50;
+    else if (code === 61)                 wd = 37;
+    else if (code === 63)                 wd = 52;
+    else if (code === 65)                 wd = 66;
+    else if (code === 66 || code === 67)  wd = 58;
+    else if (code === 71)                 wd = 18;
+    else if (code === 73)                 wd = 40;
+    else if (code === 75 || code === 77)  wd = 55;
+    else if (code === 80)                 wd = 35;
+    else if (code === 81)                 wd = 47;
+    else if (code === 82)                 wd = 62;
+    else if (code >= 95)                  wd = 78;
+    s -= wd * WEATHER_HARSHNESS;
+
+    let windD = 0;
+    if      (wind <=  7) windD = 0;
+    else if (wind <= 13) windD = 8;
+    else if (wind <= 20) windD = 20;
+    else if (wind <= 28) windD = 33;
+    else                 windD = 47;
+    s -= windD * WIND_SENSITIVITY;
+
     if (precip > 0.05) s -= 10;
     return Math.min(105, s);
 }
 
 function tempRelativeScore(temp, month) {
     const avg = NYC_AVG_HIGH[month];
-    const improvement = Math.abs(avg - IDEAL_TEMP) - Math.abs(temp - IDEAL_TEMP);
-    return Math.max(15, Math.min(100, 70 + improvement * 1.8));
+    function rawScore(t) {
+        if (t < IDEAL_TEMP_LOW) {
+            const d = IDEAL_TEMP_LOW - t;
+            return 100 - (d * COLD_LIN_SLOPE + d * d * COLD_QUAD_SLOPE);
+        }
+        if (t > IDEAL_TEMP_HIGH) {
+            return 100 - (t - IDEAL_TEMP_HIGH) * HOT_SLOPE;
+        }
+        return 100;
+    }
+    return Math.max(15, Math.min(100, 70 + (rawScore(temp) - rawScore(avg))));
 }
 
 function calculateGrade(temp, wind, precip, code, month) {
     const cScore = conditionsScore(code, wind, precip);
     const tScore = tempRelativeScore(temp, month);
-    const final  = Math.min(100, Math.round(0.60 * cScore + 0.40 * tScore));
+    const final  = Math.min(100, Math.round(CONDITIONS_WEIGHT * cScore + (1 - CONDITIONS_WEIGHT) * tScore));
     let letter, color;
     if      (final >= 96) { letter = "A+"; color = "var(--grade-a)"; }
     else if (final >= 90) { letter = "A";  color = "var(--grade-a)"; }
